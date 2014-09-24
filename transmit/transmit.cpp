@@ -46,8 +46,8 @@ void Transmit::start() {
     char real_gateway_ip[100];
     sprintf(real_gateway_ip, "%s\0", gateway_ip);
 
-    int socket_desc = socket(AF_INET, SOCK_DGRAM, 0);
-    if (socket_desc == -1)
+    int socket_src = socket(AF_INET, SOCK_DGRAM, 0);
+    if (socket_src == -1)
     {
       break;
     }
@@ -55,11 +55,16 @@ void Transmit::start() {
     server.sin_addr.s_addr = inet_addr(real_gateway_ip);
     server.sin_family = AF_INET;
     server.sin_port = htons(ap_recv_port);
-    int i = connect(socket_desc, (struct sockaddr *)&server, sizeof(server));
+
+    struct sockaddr_in addr_from;
+    addr_from.sin_family = AF_INET;
+    addr_from.sin_port = htons(0);
+    addr_from.sin_addr.s_addr = htons(INADDR_ANY);
+    int i = ::bind(socket_src, (struct sockaddr*)&addr_from, sizeof(addr_from));
+
     if (i < 0)
     {
-      // log_trace("connect failed: %d", i);
-      close(socket_desc);
+      close(socket_src);
       break;
     }
     // has connected to the ap, begin to record and send data
@@ -129,13 +134,14 @@ void Transmit::start() {
         log_warn("short read, read %d frames", rc);
       }
 
-      if (send(socket_desc, buffer, frames, 0) < 0) {
+      // if (send(socket_desc, buffer, frames, 0) < 0) {
+      if (sendto(socket_src, buffer, frames, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
         break;
       }
     }
 
     free(buffer);
-    close(socket_desc);
+    close(socket_src);
 
     snd_pcm_drain(handle);
     snd_pcm_close(handle);
