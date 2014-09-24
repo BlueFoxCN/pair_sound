@@ -1,0 +1,5 @@
+#!/bin/sh
+VAR=`pgrep receive`
+if [[ -z "$VAR" ]]; then
+  `/root/receive`
+fi

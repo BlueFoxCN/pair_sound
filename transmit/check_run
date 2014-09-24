@@ -1,0 +1,5 @@
+#!/bin/sh
+VAR=`pgrep transmit`
+if [[ -z "$VAR" ]]; then
+  `/root/transmit`
+fi
