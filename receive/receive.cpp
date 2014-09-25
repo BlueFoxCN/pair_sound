@@ -57,11 +57,11 @@ void Receive::start() {
   snd_pcm_hw_params_set_channels(handle, params, channel_num);
 
   /* 44100 bits/second sampling rate (CD quality) */
-  val = 48000;
+  val = 44100;
   snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
 
   /* Set period size to 64 frames. */
-  frames = 160;
+  frames = 48;
   snd_pcm_hw_params_set_period_size_near(handle, params, &frames, &dir);
 
   /* Write the parameters to the driver */
@@ -93,7 +93,7 @@ void Receive::start() {
   addr.sin_family=AF_INET;
   addr.sin_port=htons(ap_recv_port);
   // addr.sin_addr.s_addr=inet_addr("192.168.0.1");
-  addr.sin_addr.s_addr=inet_addr("192.168.1.25");
+  addr.sin_addr.s_addr=inet_addr("127.0.0.1");
 
   int r;
   r = ::bind(fd, (struct sockaddr*)&addr, sizeof(addr));

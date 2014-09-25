@@ -45,7 +45,7 @@ void Transmit::start() {
     // char *gateway_ip = get_gateway_ip_from_local_ip(local_ip, sizeof(local_ip));
     // char real_gateway_ip[100];
     // sprintf(real_gateway_ip, "%s\0", gateway_ip);
-    char real_gateway_ip[100] = "192.168.1.25";
+    char real_gateway_ip[100] = "127.0.0.1";
 
     int socket_src = socket(AF_INET, SOCK_DGRAM, 0);
     if (socket_src == -1)
@@ -95,11 +95,11 @@ void Transmit::start() {
     snd_pcm_hw_params_set_channels(handle, params, channel_num);
 
     /* 48000 bits/second sampling rate (CD quality) */
-    val = 48000;
+    val = 44100;
     snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
 
     /* Set period size to 160 frames. */
-    frames = 160;
+    frames = 48;
     snd_pcm_hw_params_set_period_size_near(handle, params, &frames, &dir);
 
     /* Write the parameters to the driver */
