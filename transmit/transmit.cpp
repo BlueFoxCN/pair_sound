@@ -70,7 +70,7 @@ void Transmit::start() {
     }
     // has connected to the ap, begin to record and send data
     /* Open PCM device for recording (capture). */
-    rc = snd_pcm_open(&handle, "hw:0,0",
+    rc = snd_pcm_open(&handle, "default",
             SND_PCM_STREAM_CAPTURE, 0);
     if (rc < 0) {
       log_error("unable to open pcm device: %s", snd_strerror(rc));
@@ -95,11 +95,11 @@ void Transmit::start() {
     snd_pcm_hw_params_set_channels(handle, params, channel_num);
 
     /* 48000 bits/second sampling rate (CD quality) */
-    val = 44100;
+    val = 48000;
     snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
 
     /* Set period size to 160 frames. */
-    frames = 48;
+    frames = 160;
     snd_pcm_hw_params_set_period_size_near(handle, params, &frames, &dir);
 
     /* Write the parameters to the driver */
@@ -129,7 +129,8 @@ void Transmit::start() {
         log_warn("short read, read %d frames", rc);
       }
 
-      // if (send(socket_desc, buffer, frames, 0) < 0) {
+      // write(1, buffer, size);
+
       if (sendto(socket_src, buffer, size, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
         break;
       }

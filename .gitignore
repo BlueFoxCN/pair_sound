@@ -1,3 +1,6 @@
 transmit/client_c.cpp
 transmit/transmit
 receive/receive
+*.access
+*.error
+*.raw

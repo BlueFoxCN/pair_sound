@@ -33,7 +33,7 @@ void Receive::start() {
   int channel_num = 1;
 
   /* Open PCM device for playback. */
-  rc = snd_pcm_open(&handle, "hw:0,0", SND_PCM_STREAM_PLAYBACK, 0);
+  rc = snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
   if (rc < 0) {
     log_error("unable to open pcm device: %s", snd_strerror(rc));
     exit(1);
@@ -57,11 +57,11 @@ void Receive::start() {
   snd_pcm_hw_params_set_channels(handle, params, channel_num);
 
   /* 44100 bits/second sampling rate (CD quality) */
-  val = 44100;
+  val = 48000;
   snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
 
   /* Set period size to 64 frames. */
-  frames = 48;
+  frames = 160;
   snd_pcm_hw_params_set_period_size_near(handle, params, &frames, &dir);
 
   /* Write the parameters to the driver */
@@ -109,7 +109,9 @@ void Receive::start() {
 
   while (true) {
     r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
-		
+
+    // rc = write(1, buffer, size);
+
     rc = snd_pcm_writei(handle, buffer, frames);
     if (rc == -EPIPE) {
       // EPIPE means underrun
