@@ -34,7 +34,7 @@ void Receive::start() {
   int channel_num = 1;
 
   /* Open PCM device for playback. */
-  rc = snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
+  rc = snd_pcm_open(&handle, "plughw:0,0", SND_PCM_STREAM_PLAYBACK, 0);
   if (rc < 0) {
     log_error("unable to open pcm device: %s", snd_strerror(rc));
     exit(1);
@@ -111,8 +111,8 @@ void Receive::start() {
   fp = fopen("t.wav", "r");
 
   while (true) {
-    // r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
-    fread(buffer, sizeof(char), size, fp);
+    r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
+    // fread(buffer, sizeof(char), size, fp);
 
     // fwrite(buffer, sizeof(char), size, fp);
 
