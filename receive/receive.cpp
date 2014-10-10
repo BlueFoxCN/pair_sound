@@ -59,7 +59,7 @@ void Receive::start() {
 
   /* 44100 bits/second sampling rate (CD quality) */
   val = 48000;
-  // snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
+  snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
 
   /* Set period size to 64 frames. */
   frames = 160;
