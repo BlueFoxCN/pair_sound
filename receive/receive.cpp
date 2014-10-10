@@ -28,6 +28,7 @@ void Receive::start() {
   unsigned int val;
   int dir;
   snd_pcm_uframes_t frames;
+  FILE *fp;
   // char *buffer;
   char *buffer;
   int channel_num = 1;
@@ -58,7 +59,7 @@ void Receive::start() {
 
   /* 44100 bits/second sampling rate (CD quality) */
   val = 48000;
-  snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
+  // snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
 
   /* Set period size to 64 frames. */
   frames = 160;
@@ -92,8 +93,8 @@ void Receive::start() {
   struct sockaddr_in addr;
   addr.sin_family=AF_INET;
   addr.sin_port=htons(ap_recv_port);
-  // addr.sin_addr.s_addr=inet_addr("192.168.0.1");
-  addr.sin_addr.s_addr=inet_addr("127.0.0.1");
+  addr.sin_addr.s_addr=inet_addr("192.168.0.1");
+  // addr.sin_addr.s_addr=inet_addr("127.0.0.1");
 
   int r;
   r = ::bind(fd, (struct sockaddr*)&addr, sizeof(addr));
@@ -107,10 +108,13 @@ void Receive::start() {
   socklen_t len;
   len = sizeof(from);
 
-  while (true) {
-    r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
+  fp = fopen("t.wav", "r");
 
-    // rc = write(1, buffer, size);
+  while (true) {
+    // r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
+    fread(buffer, sizeof(char), size, fp);
+
+    // fwrite(buffer, sizeof(char), size, fp);
 
     rc = snd_pcm_writei(handle, buffer, frames);
     if (rc == -EPIPE) {
