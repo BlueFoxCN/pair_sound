@@ -28,9 +28,8 @@ void Receive::start() {
   unsigned int val;
   int dir;
   snd_pcm_uframes_t frames;
-  FILE *fp;
-  // char *buffer;
   char *buffer;
+  int factor;
   int channel_num = 1;
 
   /* Open PCM device for playback. */
@@ -58,7 +57,8 @@ void Receive::start() {
   snd_pcm_hw_params_set_channels(handle, params, channel_num);
 
   /* 44100 bits/second sampling rate (CD quality) */
-  val = 48000;
+  factor = 6;
+  val = 48000 / factor;
   snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
 
   /* Set period size to 64 frames. */
@@ -108,13 +108,8 @@ void Receive::start() {
   socklen_t len;
   len = sizeof(from);
 
-  fp = fopen("t.wav", "r");
-
   while (true) {
     r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
-    // fread(buffer, sizeof(char), size, fp);
-
-    // fwrite(buffer, sizeof(char), size, fp);
 
     rc = snd_pcm_writei(handle, buffer, frames);
     if (rc == -EPIPE) {

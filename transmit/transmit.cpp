@@ -29,11 +29,11 @@ void Transmit::start() {
   unsigned int val;
   int dir;
   snd_pcm_uframes_t frames;
-  FILE *fp;
   int channel_num = 1;
 
   char *buffer;
-  fp = fopen("t.wav", "w+");
+  char *t_buffer;
+  int factor;
   while (true) {
     sleep(1);
     char *l = get_local_ip("wlan0");
@@ -100,7 +100,7 @@ void Transmit::start() {
     snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
 
     // Set period size to 160 frames.
-    int factor = 2;  // 160 = fraems / factor
+    factor = 6;  // 160 = fraems / factor
     frames = 160 * factor;
     snd_pcm_hw_params_set_period_size_near(handle, params, &frames, &dir);
 
@@ -115,7 +115,7 @@ void Transmit::start() {
     snd_pcm_hw_params_get_period_size(params, &frames, &dir);
     size = frames * 2 * channel_num; // 2 bytes/sample, 2 channels
     buffer = (char *) malloc(size);
-    char *t_buffer = (char *) malloc(size / factor);
+    t_buffer = (char *) malloc(size / factor);
 
     snd_pcm_hw_params_get_period_time(params, &val, &dir);
 
@@ -132,17 +132,14 @@ void Transmit::start() {
         log_warn("short read, read %d frames", rc);
       }
 
-      for (int i = 0; i < size / factor; i ++) {
-        t_buffer[i] = buffer[2 * i];
+      for (int i = 0; i < size / factor / 2; i ++) {
+        t_buffer[2 * i] = buffer[2 * factor * i];
+        t_buffer[2 * i + 1] = buffer[2 * factor * i + 1];
       }
 
-      // write(1, buffer, size);
-      // if (sendto(socket_src, buffer, size, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
       if (sendto(socket_src, t_buffer, size / factor, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
         break;
       }
-
-      // fwrite(buffer, sizeof(char), size, fp);
     }
 
     free(buffer);
