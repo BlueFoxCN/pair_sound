@@ -129,7 +129,9 @@ void Receive::start() {
       r = recvfrom(fd, adpcm_buffer, size / 2, 0, (struct sockaddr*)&from, &len);
       for (int i = 0; i < size / 2; i++) {
         log_warn("1111111111111");
-        code = ( (short)adpcm_buffer[i] ) & 15;
+        // code = ( (short)adpcm_buffer[i] ) & 15;
+        code = (short)adpcm_buffer[i];
+        log_warn("*************");
         if ((code & 8) != 0) {
           sb = 1;
         } else {
