@@ -33,7 +33,7 @@ void Receive::start() {
   int channel_num = 1;
 
   // adpcm compress
-  bool adpcm = true;
+  bool adpcm = false;
   short code, sb, delta, cur_sample = 0, cur_data;
   int index = 0;
   char *adpcm_buffer;
@@ -73,7 +73,7 @@ void Receive::start() {
   snd_pcm_hw_params_set_channels(handle, params, channel_num);
 
   /* 44100 bits/second sampling rate (CD quality) */
-  factor = 1;
+  factor = 6;
   val = 48000 / factor;
   snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
 

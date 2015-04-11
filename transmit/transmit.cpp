@@ -37,7 +37,7 @@ void Transmit::start() {
   int factor;
 
   // adpcm compress
-  bool adpcm = true;
+  bool adpcm = false;
   short code, sb, delta, cur_sample, prev_sample = 0;
   int index = 0;
   char *adpcm_buffer;
@@ -118,7 +118,7 @@ void Transmit::start() {
     snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
 
     // Set period size to 160 frames.
-    factor = 1;  // 160 = fraems / factor
+    factor = 6;  // 160 = fraems / factor
     frames = 160 * factor;
     snd_pcm_hw_params_set_period_size_near(handle, params, &frames, &dir);
 
