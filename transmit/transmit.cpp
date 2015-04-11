@@ -159,7 +159,7 @@ void Transmit::start() {
       if (adpcm) {
         // apply adpcm algorithm to the buffer data
         for (int i = 0; i < size / factor / 2; i++) {
-          cur_sample = (((short)t_buffer[2 * i + 1]) << 8) | (((short)t_buffer[2 * i]) & 0xFF);
+          cur_sample = (((short)t_buffer[2 * i + 1]) << 8) | (t_buffer[2 * i] & 0xFF);
           delta = cur_sample - prev_sample;
           if (delta < 0) {
             delta = -delta;
