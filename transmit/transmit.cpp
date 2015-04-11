@@ -160,39 +160,6 @@ void Transmit::start() {
       }
 
       if (adpcm) {
-        /*
-        t_buffer[0] = 'a';
-        t_buffer[1] = 'b';
-        t_buffer[2] = 'c';
-        t_buffer[3] = 'd';
-        t_buffer[4] = 'e';
-        t_buffer[5] = 'f';
-        t_buffer[6] = 'g';
-        t_buffer[7] = 'h';
-        t_buffer[8] = 'i';
-        t_buffer[9] = 'j';
-        t_buffer[10] = 'k';
-        t_buffer[11] = 'l';
-        t_buffer[12] = 'm';
-        t_buffer[13] = 'n';
-        t_buffer[14] = 'o';
-        t_buffer[15] = 'p';
-        t_buffer[16] = 'q';
-        t_buffer[17] = 'r';
-        t_buffer[18] = 's';
-        t_buffer[19] = 't';
-        log_warn("AAAAAAAAAAAA");
-        log_warn("1: %d", (((short)t_buffer[2 * 0 + 1]) << 8) | t_buffer[2 * 0]);
-        log_warn("2: %d", (((short)t_buffer[2 * 1 + 1]) << 8) | t_buffer[2 * 1]);
-        log_warn("3: %d", (((short)t_buffer[2 * 2 + 1]) << 8) | t_buffer[2 * 2]);
-        log_warn("4: %d", (((short)t_buffer[2 * 3 + 1]) << 8) | t_buffer[2 * 3]);
-        log_warn("5: %d", (((short)t_buffer[2 * 4 + 1]) << 8) | t_buffer[2 * 4]);
-        log_warn("6: %d", (((short)t_buffer[2 * 5 + 1]) << 8) | t_buffer[2 * 5]);
-        log_warn("7: %d", (((short)t_buffer[2 * 6 + 1]) << 8) | t_buffer[2 * 6]);
-        log_warn("8: %d", (((short)t_buffer[2 * 7 + 1]) << 8) | t_buffer[2 * 7]);
-        log_warn("9: %d", (((short)t_buffer[2 * 8 + 1]) << 8) | t_buffer[2 * 8]);
-        log_warn("10: %d", (((short)t_buffer[2 * 9 + 1]) << 8) | t_buffer[2 * 9]);
-        */
         // apply adpcm algorithm to the buffer data
         for (int i = 0; i < size / factor / 2; i++) {
           cur_sample = (((short)t_buffer[2 * i + 1]) << 8) | t_buffer[2 * i];
@@ -222,19 +189,6 @@ void Transmit::start() {
             adpcm_buffer[( i - 1 ) / 2] = (temp2 << 4) | temp1;
           }
         }
-        /*
-        log_warn("BBBBBBBBBBBBB");
-        log_warn("1: %d", adpcm_buffer[0]);
-        log_warn("1: %c", adpcm_buffer[0]);
-        log_warn("2: %d", adpcm_buffer[1]);
-        log_warn("2: %c", adpcm_buffer[1]);
-        log_warn("3: %d", adpcm_buffer[2]);
-        log_warn("3: %c", adpcm_buffer[2]);
-        log_warn("4: %d", adpcm_buffer[3]);
-        log_warn("4: %c", adpcm_buffer[3]);
-        log_warn("5: %d", adpcm_buffer[4]);
-        log_warn("5: %c", adpcm_buffer[4]);
-        */
         if (sendto(socket_src, adpcm_buffer, size / factor / 4, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
           break;
         }

@@ -128,13 +128,6 @@ void Receive::start() {
   while (true) {
     if (adpcm) {
       r = recvfrom(fd, adpcm_buffer, size / 4, 0, (struct sockaddr*)&from, &len);
-      /*
-      adpcm_buffer[0] = 'w';
-      adpcm_buffer[1] = 'w';
-      adpcm_buffer[2] = 'g';
-      adpcm_buffer[3] = '3';
-      adpcm_buffer[4] = '4';
-      */
       for (int i = 0; i < size / 4; i++) {
         code = ( (short)adpcm_buffer[i] ) & 15;
         if ((code & 8) != 0) {
@@ -192,24 +185,6 @@ void Receive::start() {
         buffer[i * 4 + 2] = cur_data & 0xFF;
         buffer[i * 4 + 3] = cur_data >> 8;
       }
-      /*
-      log_warn("AAAAAAAAAAAA");
-      log_warn("1: %d", (((short)buffer[2 * 0 + 1]) << 8) | (buffer[2 * 0] & 0xFF));
-      log_warn("2: %d", (((short)buffer[2 * 1 + 1]) << 8) | (buffer[2 * 1] & 0xFF));
-      log_warn("3: %d", (((short)buffer[2 * 2 + 1]) << 8) | (buffer[2 * 2] & 0xFF));
-      log_warn("4: %d", (((short)buffer[2 * 3 + 1]) << 8) | (buffer[2 * 3] & 0xFF));
-      log_warn("5: %d", (((short)buffer[2 * 4 + 1]) << 8) | (buffer[2 * 4] & 0xFF));
-      log_warn("6: %d", (((short)buffer[2 * 5 + 1]) << 8) | (buffer[2 * 5] & 0xFF));
-      log_warn("7: %d", (((short)buffer[2 * 6 + 1]) << 8) | (buffer[2 * 6] & 0xFF));
-      log_warn("8: %d", (((short)buffer[2 * 7 + 1]) << 8) | (buffer[2 * 7] & 0xFF));
-      log_warn("9: %d", (((short)buffer[2 * 8 + 1]) << 8) | (buffer[2 * 8] & 0xFF));
-      log_warn("10: %d", (((short)buffer[2 * 9 + 1]) << 8) | (buffer[2 * 9] & 0xFF));
-      */
-      // log_warn("1: %d", (((short)buffer[2 * 0 + 1]) << 8) | buffer[2 * 0]);
-      // log_warn("2: %d", (((short)buffer[2 * 1 + 1]) << 8) | buffer[2 * 1]);
-      // log_warn("3: %d", (((short)buffer[2 * 2 + 1]) << 8) | buffer[2 * 2]);
-      // log_warn("4: %d", (((short)buffer[2 * 3 + 1]) << 8) | buffer[2 * 3]);
-      // log_warn("5: %d", (((short)buffer[2 * 4 + 1]) << 8) | buffer[2 * 4]);
     } else {
       r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
     }
