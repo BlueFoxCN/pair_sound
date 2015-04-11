@@ -73,7 +73,7 @@ void Receive::start() {
   snd_pcm_hw_params_set_channels(handle, params, channel_num);
 
   /* 44100 bits/second sampling rate (CD quality) */
-  factor = 6;
+  factor = 1;
   val = 48000 / factor;
   snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
 

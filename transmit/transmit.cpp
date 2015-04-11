@@ -19,9 +19,6 @@ Transmit::Transmit() {
 }
 
 void Transmit::start() {
-  log_warn("int: %d", sizeof(int));
-  log_warn("short: %d", sizeof(short));
-  log_warn("char: %d", sizeof(char));
   int ap_recv_port = 9003;
 
   // about record
@@ -121,7 +118,7 @@ void Transmit::start() {
     snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
 
     // Set period size to 160 frames.
-    factor = 6;  // 160 = fraems / factor
+    factor = 1;  // 160 = fraems / factor
     frames = 160 * factor;
     snd_pcm_hw_params_set_period_size_near(handle, params, &frames, &dir);
 
