@@ -183,13 +183,13 @@ void Receive::start() {
         }
         buffer[i * 4 + 2] = cur_data;
         buffer[i * 4 + 3] = cur_data >> 8;
-        log_warn("AAAAAAAAAAAA");
-        log_warn("1: %d", (((short)buffer[2 * 0 + 1]) << 8) | buffer[2 * 0]);
-        log_warn("2: %d", (((short)buffer[2 * 1 + 1]) << 8) | buffer[2 * 1]);
-        log_warn("3: %d", (((short)buffer[2 * 2 + 1]) << 8) | buffer[2 * 2]);
-        log_warn("4: %d", (((short)buffer[2 * 3 + 1]) << 8) | buffer[2 * 3]);
-        log_warn("5: %d", (((short)buffer[2 * 4 + 1]) << 8) | buffer[2 * 4]);
       }
+      log_warn("AAAAAAAAAAAA");
+      log_warn("1: %d", (((short)buffer[2 * 0 + 1]) << 8) | buffer[2 * 0]);
+      log_warn("2: %d", (((short)buffer[2 * 1 + 1]) << 8) | buffer[2 * 1]);
+      log_warn("3: %d", (((short)buffer[2 * 2 + 1]) << 8) | buffer[2 * 2]);
+      log_warn("4: %d", (((short)buffer[2 * 3 + 1]) << 8) | buffer[2 * 3]);
+      log_warn("5: %d", (((short)buffer[2 * 4 + 1]) << 8) | buffer[2 * 4]);
     } else {
       r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
     }
