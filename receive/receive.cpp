@@ -34,7 +34,7 @@ void Receive::start() {
 
   // adpcm compress
   bool adpcm = true;
-  short code, sb, delta, cur_sample, cur_data;
+  short code, sb, delta, cur_sample = 0, cur_data;
   int index = 0;
   char *adpcm_buffer;
   short temp1 = 0, temp2 = 0;
@@ -128,33 +128,26 @@ void Receive::start() {
   while (true) {
     if (adpcm) {
       r = recvfrom(fd, adpcm_buffer, size / 4, 0, (struct sockaddr*)&from, &len);
-      log_warn("AAAAAAAAAAAA");
+      /*
+      adpcm_buffer[0] = 'w';
+      adpcm_buffer[1] = 'w';
+      adpcm_buffer[2] = 'g';
+      adpcm_buffer[3] = '3';
+      adpcm_buffer[4] = '4';
+      */
       for (int i = 0; i < size / 4; i++) {
-        log_warn("-----");
-        log_warn("%d", (short)adpcm_buffer[i]);
         code = ( (short)adpcm_buffer[i] ) & 15;
-        log_warn("00000");
-        log_warn("%d", code);
         if ((code & 8) != 0) {
           sb = 1;
         } else {
           sb = 0;
         }
         code &= 7;
-        log_warn("11111");
-        log_warn("%d", code);
-        log_warn("%d", sb);
         delta = (step_table[index]*code) / 4 + step_table[index] / 8;
-        log_warn("22222");
-        log_warn("%d", delta);
         if (sb == 1) {
           delta = -delta;
         }
-        log_warn("33333");
-        log_warn("%d", delta);
         cur_sample += delta;
-        log_warn("44444");
-        log_warn("%d", cur_sample);
         if (cur_sample > 32767) {
           cur_data = 32767;
         } else if (cur_sample < -32767) {
@@ -162,18 +155,16 @@ void Receive::start() {
         } else {
           cur_data = cur_sample;
         }
-        log_warn("55555");
-        log_warn("%d", cur_data);
         index += index_adjust[code];
         if (index < 0) {
           index = 0;
         } else if (index > 88) {
           index = 88;
         }
-        buffer[i * 4] = cur_data;
+        buffer[i * 4] = cur_data & 0xFF;
         buffer[i * 4 + 1] = cur_data >> 8;
 
-        code = ( (short)adpcm_buffer[i] >> 8) & 15;
+        code = ( (short)adpcm_buffer[i] >> 4) & 15;
         if ((code & 8) != 0) {
           sb = 1;
         } else {
@@ -198,9 +189,22 @@ void Receive::start() {
         } else if (index > 88) {
           index = 88;
         }
-        buffer[i * 4 + 2] = cur_data;
+        buffer[i * 4 + 2] = cur_data & 0xFF;
         buffer[i * 4 + 3] = cur_data >> 8;
       }
+      /*
+      log_warn("AAAAAAAAAAAA");
+      log_warn("1: %d", (((short)buffer[2 * 0 + 1]) << 8) | (buffer[2 * 0] & 0xFF));
+      log_warn("2: %d", (((short)buffer[2 * 1 + 1]) << 8) | (buffer[2 * 1] & 0xFF));
+      log_warn("3: %d", (((short)buffer[2 * 2 + 1]) << 8) | (buffer[2 * 2] & 0xFF));
+      log_warn("4: %d", (((short)buffer[2 * 3 + 1]) << 8) | (buffer[2 * 3] & 0xFF));
+      log_warn("5: %d", (((short)buffer[2 * 4 + 1]) << 8) | (buffer[2 * 4] & 0xFF));
+      log_warn("6: %d", (((short)buffer[2 * 5 + 1]) << 8) | (buffer[2 * 5] & 0xFF));
+      log_warn("7: %d", (((short)buffer[2 * 6 + 1]) << 8) | (buffer[2 * 6] & 0xFF));
+      log_warn("8: %d", (((short)buffer[2 * 7 + 1]) << 8) | (buffer[2 * 7] & 0xFF));
+      log_warn("9: %d", (((short)buffer[2 * 8 + 1]) << 8) | (buffer[2 * 8] & 0xFF));
+      log_warn("10: %d", (((short)buffer[2 * 9 + 1]) << 8) | (buffer[2 * 9] & 0xFF));
+      */
       // log_warn("1: %d", (((short)buffer[2 * 0 + 1]) << 8) | buffer[2 * 0]);
       // log_warn("2: %d", (((short)buffer[2 * 1 + 1]) << 8) | buffer[2 * 1]);
       // log_warn("3: %d", (((short)buffer[2 * 2 + 1]) << 8) | buffer[2 * 2]);
