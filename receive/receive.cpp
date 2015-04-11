@@ -129,7 +129,7 @@ void Receive::start() {
     if (adpcm) {
       r = recvfrom(fd, adpcm_buffer, size / 4, 0, (struct sockaddr*)&from, &len);
       for (int i = 0; i < size / 4; i++) {
-        code = ( (short)adpcm_buffer[i] ) & 15;
+        code = ( (short)adpcm_buffer[i] ) & 0x0F;
         if ((code & 8) != 0) {
           sb = 1;
         } else {
@@ -157,7 +157,7 @@ void Receive::start() {
         buffer[i * 4] = cur_data & 0xFF;
         buffer[i * 4 + 1] = cur_data >> 8;
 
-        code = ( (short)adpcm_buffer[i] >> 4) & 15;
+        code = ( (short)adpcm_buffer[i] >> 4) & 0x0F;
         if ((code & 8) != 0) {
           sb = 1;
         } else {
