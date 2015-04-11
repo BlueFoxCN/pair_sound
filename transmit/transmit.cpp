@@ -204,7 +204,7 @@ void Transmit::start() {
           } else
           {
             temp2 = code | sb;
-            adpcm_buffer[( i - 1 ) / 2] = (temp2 << 4) & temp1;
+            adpcm_buffer[( i - 1 ) / 2] = (temp2 << 4) | temp1;
             log_warn("55555");
             log_warn("%d", temp2);
             log_warn("666666");
