@@ -130,7 +130,8 @@ void Receive::start() {
       for (int i = 0; i < size / 2; i++) {
         log_warn("1111111111111");
         // code = ( (short)adpcm_buffer[i] ) & 15;
-        code = (short)adpcm_buffer[i];
+        // code = (((short)0 << 8) | adpcm_buffer[i];
+        code = adpcm_buffer[i];
         log_warn("*************");
         if ((code & 8) != 0) {
           sb = 1;
