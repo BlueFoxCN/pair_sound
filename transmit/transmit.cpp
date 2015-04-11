@@ -19,6 +19,9 @@ Transmit::Transmit() {
 }
 
 void Transmit::start() {
+  log_warn("int: %d", sizeof(int));
+  log_warn("short: %d", sizeof(short));
+  log_warn("char: %d", sizeof(char));
   int ap_recv_port = 9003;
 
   // about record
@@ -157,6 +160,7 @@ void Transmit::start() {
       }
 
       if (adpcm) {
+        log_warn("AAAAAAAAAAAA");
         // apply adpcm algorithm to the buffer data
         for (int i = 0; i < size / factor / 2; i++) {
           cur_sample = (((short)t_buffer[2 * i + 1]) << 8) | t_buffer[2 * i];
@@ -171,12 +175,14 @@ void Transmit::start() {
           if (code > 7) {
             code = 7;
           }
+          log_warn("BBBBBBBBBBBBB");
           index += index_adjust[code];
           if (index < 0) {
             index = 0;
           } else if (index > 88) {
             index = 88;
           }
+          log_warn("CCCCCCCCCCCCCC");
           prev_sample = cur_sample;
           if (i % 2 == 0) {
             temp1 = code | sb;
@@ -185,6 +191,7 @@ void Transmit::start() {
             temp2 = code | sb;
             adpcm_buffer[( i - 1 ) / 2] = (temp2 << 4) & temp1;
           }
+          log_warn("DDDDDDDDDDDDDDD");
         }
 
         if (sendto(socket_src, adpcm_buffer, size / factor / 4, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
