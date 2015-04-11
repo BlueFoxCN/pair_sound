@@ -154,8 +154,10 @@ void Receive::start() {
         } else if (index > 88) {
           index = 88;
         }
-        buffer[i * 4] = cur_data & 0xFF;
-        buffer[i * 4 + 1] = cur_data >> 8;
+        // buffer[i * 4] = cur_data & 0xFF;
+        // buffer[i * 4 + 1] = cur_data >> 8;
+        buffer[i * 4 + 1] = cur_data & 0xFF;
+        buffer[i * 4] = cur_data >> 8;
 
         code = ( (short)adpcm_buffer[i] >> 4) & 0x0F;
         if ((code & 8) != 0) {
@@ -182,8 +184,10 @@ void Receive::start() {
         } else if (index > 88) {
           index = 88;
         }
-        buffer[i * 4 + 2] = cur_data & 0xFF;
-        buffer[i * 4 + 3] = cur_data >> 8;
+        // buffer[i * 4 + 2] = cur_data & 0xFF;
+        // buffer[i * 4 + 3] = cur_data >> 8;
+        buffer[i * 4 + 3] = cur_data & 0xFF;
+        buffer[i * 4 + 2] = cur_data >> 8;
       }
     } else {
       r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
