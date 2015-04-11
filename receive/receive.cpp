@@ -128,17 +128,20 @@ void Receive::start() {
     if (adpcm) {
       r = recvfrom(fd, adpcm_buffer, size / 2, 0, (struct sockaddr*)&from, &len);
       for (int i = 0; i < size / 2; i++) {
+        log_warn("1111111111111");
         code = ( (short)adpcm_buffer[i] ) & 15;
         if ((code & 8) != 0) {
           sb = 1;
         } else {
           sb = 0;
         }
+        log_warn("2222222222222");
         code &= 7;
         delta = (step_table[index]*code) / 4 + step_table[index] / 8;
         if (sb == 1) {
           delta = -delta;
         }
+        log_warn("3333333333333");
         cur_sample += delta;
         if (cur_sample > 32767) {
           cur_data = 32767;
@@ -147,26 +150,31 @@ void Receive::start() {
         } else {
           cur_data = cur_sample;
         }
+        log_warn("44444444444444");
         index += index_adjust[code];
         if (index < 0) {
           index = 0;
         } else if (index > 88) {
           index = 88;
         }
+        log_warn("55555555555555");
         buffer[i * 4] = cur_data;
         buffer[i * 4 + 1] = cur_data >> 8;
 
+        log_warn("66666666666666");
         code = ( (short)adpcm_buffer[i] >> 8) & 15;
         if ((code & 8) != 0) {
           sb = 1;
         } else {
           sb = 0;
         }
+        log_warn("77777777777777");
         code &= 7;
         delta = (step_table[index]*code) / 4 + step_table[index] / 8;
         if (sb == 1) {
           delta = -delta;
         }
+        log_warn("888888888888888");
         cur_sample += delta;
         if (cur_sample > 32767) {
           cur_data = 32767;
@@ -175,12 +183,14 @@ void Receive::start() {
         } else {
           cur_data = cur_sample;
         }
+        log_warn("999999999999999");
         index += index_adjust[code];
         if (index < 0) {
           index = 0;
         } else if (index > 88) {
           index = 88;
         }
+        log_warn("000000000000000");
         buffer[i * 4 + 2] = cur_data;
         buffer[i * 4 + 3] = cur_data >> 8;
       }
