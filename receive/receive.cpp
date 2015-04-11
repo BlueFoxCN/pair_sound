@@ -128,19 +128,31 @@ void Receive::start() {
   while (true) {
     if (adpcm) {
       r = recvfrom(fd, adpcm_buffer, size / 4, 0, (struct sockaddr*)&from, &len);
+      log_warn("AAAAAAAAAAAA");
       for (int i = 0; i < size / 4; i++) {
         code = ( (short)adpcm_buffer[i] ) & 15;
+        log_warn("00000");
+        log_warn("%d", code);
         if ((code & 8) != 0) {
           sb = 1;
         } else {
           sb = 0;
         }
         code &= 7;
+        log_warn("11111");
+        log_warn("%d", code);
+        log_warn("%d", sb);
         delta = (step_table[index]*code) / 4 + step_table[index] / 8;
+        log_warn("22222");
+        log_warn("%d", delta);
         if (sb == 1) {
           delta = -delta;
         }
+        log_warn("33333");
+        log_warn("%d", delta);
         cur_sample += delta;
+        log_warn("44444");
+        log_warn("%d", cur_sample);
         if (cur_sample > 32767) {
           cur_data = 32767;
         } else if (cur_sample < -32767) {
@@ -148,6 +160,8 @@ void Receive::start() {
         } else {
           cur_data = cur_sample;
         }
+        log_warn("55555");
+        log_warn("%d", cur_data);
         index += index_adjust[code];
         if (index < 0) {
           index = 0;
@@ -185,11 +199,11 @@ void Receive::start() {
         buffer[i * 4 + 2] = cur_data;
         buffer[i * 4 + 3] = cur_data >> 8;
       }
-      log_warn("1: %d", (((short)buffer[2 * 0 + 1]) << 8) | buffer[2 * 0]);
-      log_warn("2: %d", (((short)buffer[2 * 1 + 1]) << 8) | buffer[2 * 1]);
-      log_warn("3: %d", (((short)buffer[2 * 2 + 1]) << 8) | buffer[2 * 2]);
-      log_warn("4: %d", (((short)buffer[2 * 3 + 1]) << 8) | buffer[2 * 3]);
-      log_warn("5: %d", (((short)buffer[2 * 4 + 1]) << 8) | buffer[2 * 4]);
+      // log_warn("1: %d", (((short)buffer[2 * 0 + 1]) << 8) | buffer[2 * 0]);
+      // log_warn("2: %d", (((short)buffer[2 * 1 + 1]) << 8) | buffer[2 * 1]);
+      // log_warn("3: %d", (((short)buffer[2 * 2 + 1]) << 8) | buffer[2 * 2]);
+      // log_warn("4: %d", (((short)buffer[2 * 3 + 1]) << 8) | buffer[2 * 3]);
+      // log_warn("5: %d", (((short)buffer[2 * 4 + 1]) << 8) | buffer[2 * 4]);
     } else {
       r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
     }
