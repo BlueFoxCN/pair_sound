@@ -32,6 +32,22 @@ void Receive::start() {
   int factor;
   int channel_num = 1;
 
+  // adpcm compress
+  bool adpcm = true;
+  short code, sb, delta, cur_sample, cur_data;
+  int index = 0;
+  char *adpcm_buffer;
+  short temp1 = 0, temp2 = 0;
+  int index_adjust[8] = {-1,-1,-1,-1,2,4,6,8};
+  int step_table[89] = 
+    {
+      7,8,9,10,11,12,13,14,16,17,19,21,23,25,28,31,34,37,41,45,
+      50,55,60,66,73,80,88,97,107,118,130,143,157,173,190,209,230,253,279,307,337,371,
+      408,449,494,544,598,658,724,796,876,963,1060,1166,1282,1411,1552,1707,1878,2066,
+      2272,2499,2749,3024,3327,3660,4026,4428,4871,5358,5894,6484,7132,7845,8630,9493,
+      10442,11487,12635,13899,15289,16818,18500,20350,22385,24623,27086,29794,32767
+    };
+
   /* Open PCM device for playback. */
   rc = snd_pcm_open(&handle, "plughw:0,0", SND_PCM_STREAM_PLAYBACK, 0);
   if (rc < 0) {
@@ -109,7 +125,68 @@ void Receive::start() {
   len = sizeof(from);
 
   while (true) {
-    r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
+    if (adpcm) {
+      r = recvfrom(fd, adpcm_buffer, size / 2, 0, (struct sockaddr*)&from, &len);
+      for (int i = 0; i < size / 2; i++) {
+        code = ( (short)adpcm_buffer[i] ) & 15;
+        if ((code & 8) != 0) {
+          sb = 1;
+        } else {
+          sb = 0;
+        }
+        code &= 7;
+        delta = (step_table[index]*code) / 4 + step_table[index] / 8;
+        if (sb == 1) {
+          delta = -delta;
+        }
+        cur_sample += delta;
+        if (cur_sample > 32767) {
+          cur_data = 32767;
+        } else if (cur_sample < -32767) {
+          cur_data = -32767;
+        } else {
+          cur_data = cur_sample;
+        }
+        index += index_adjust[code];
+        if (index < 0) {
+          index = 0;
+        } else if (index > 88) {
+          index = 88;
+        }
+        buffer[i * 4] = cur_data;
+        buffer[i * 4 + 1] = cur_data >> 8;
+
+        code = ( (short)adpcm_buffer[i] >> 8) & 15;
+        if ((code & 8) != 0) {
+          sb = 1;
+        } else {
+          sb = 0;
+        }
+        code &= 7;
+        delta = (step_table[index]*code) / 4 + step_table[index] / 8;
+        if (sb == 1) {
+          delta = -delta;
+        }
+        cur_sample += delta;
+        if (cur_sample > 32767) {
+          cur_data = 32767;
+        } else if (cur_sample < -32767) {
+          cur_data = -32767;
+        } else {
+          cur_data = cur_sample;
+        }
+        index += index_adjust[code];
+        if (index < 0) {
+          index = 0;
+        } else if (index > 88) {
+          index = 88;
+        }
+        buffer[i * 4 + 2] = cur_data;
+        buffer[i * 4 + 3] = cur_data >> 8;
+      }
+    } else {
+      r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
+    }
 
     rc = snd_pcm_writei(handle, buffer, frames);
     if (rc == -EPIPE) {
