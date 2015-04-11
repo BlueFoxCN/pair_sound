@@ -177,7 +177,7 @@ void Transmit::start() {
           } else if (index > 88) {
             index = 88;
           }
-          prev_sample = cur_sample
+          prev_sample = cur_sample;
           if (i % 2 == 0) {
             temp1 = code | sb;
           } else
