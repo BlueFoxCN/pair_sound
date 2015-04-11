@@ -31,9 +31,27 @@ void Transmit::start() {
   snd_pcm_uframes_t frames;
   int channel_num = 1;
 
+  // buffers
   char *buffer;
   char *t_buffer;
   int factor;
+
+  // adpcm compress
+  bool adpcm = true;
+  short code, sb, delta, cur_sample, prev_sample = 0;
+  int index = 0;
+  char *adpcm_buffer;
+  short temp1 = 0, temp2 = 0;
+  int index_adjust[8] = {-1,-1,-1,-1,2,4,6,8};
+  int step_table[89] = 
+    {
+      7,8,9,10,11,12,13,14,16,17,19,21,23,25,28,31,34,37,41,45,
+      50,55,60,66,73,80,88,97,107,118,130,143,157,173,190,209,230,253,279,307,337,371,
+      408,449,494,544,598,658,724,796,876,963,1060,1166,1282,1411,1552,1707,1878,2066,
+      2272,2499,2749,3024,3327,3660,4026,4428,4871,5358,5894,6484,7132,7845,8630,9493,
+      10442,11487,12635,13899,15289,16818,18500,20350,22385,24623,27086,29794,32767
+    };
+
   while (true) {
     sleep(1);
     char *l = get_local_ip("wlan0");
@@ -116,6 +134,7 @@ void Transmit::start() {
     size = frames * 2 * channel_num; // 2 bytes/sample, 2 channels
     buffer = (char *) malloc(size);
     t_buffer = (char *) malloc(size / factor);
+    adpcm_buffer = (char *) malloc(size / factor / 4);
 
     snd_pcm_hw_params_get_period_time(params, &val, &dir);
 
@@ -137,8 +156,44 @@ void Transmit::start() {
         t_buffer[2 * i + 1] = buffer[2 * factor * i + 1];
       }
 
-      if (sendto(socket_src, t_buffer, size / factor, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
-        break;
+      if (adpcm) {
+        // apply adpcm algorithm to the buffer data
+        for (int i = 0; i < size / factor / 2; i++) {
+          cur_sample = (((short)t_buffer[2 * i + 1]) << 8) | t_buffer[2 * i];
+          delta = cur_sample - prev_sample;
+          if (delta < 0) {
+            delta = -delta;
+            sb = 8;
+          } else {
+            sb = 0;
+          }
+          code = 4 * delta / step_table[index];
+          if (code > 7) {
+            code = 7;
+          }
+          index += index_adjust[code];
+          if (index < 0) {
+            index = 0;
+          } else if (index > 88) {
+            index = 88;
+          }
+          prev_sample = cur_sample
+          if (i % 2 == 0) {
+            temp1 = code | sb;
+          } else
+          {
+            temp2 = code | sb;
+            adpcm_buffer[( i - 1 ) / 2] = (temp2 << 4) & temp1;
+          }
+        }
+
+        if (sendto(socket_src, adpcm_buffer, size / factor / 4, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
+          break;
+        }
+      } else {
+        if (sendto(socket_src, t_buffer, size / factor, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
+          break;
+        }
       }
     }
 
