@@ -37,7 +37,7 @@ void Transmit::start() {
   int factor;
 
   // adpcm compress
-  bool adpcm = false;
+  bool adpcm = true;
   short code, sb, delta, cur_sample, prev_sample = 0;
   int index = 0;
   char *adpcm_buffer;

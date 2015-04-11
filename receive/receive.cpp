@@ -33,7 +33,7 @@ void Receive::start() {
   int channel_num = 1;
 
   // adpcm compress
-  bool adpcm = false;
+  bool adpcm = true;
   short code, sb, delta, cur_sample = 0, cur_data;
   int index = 0;
   char *adpcm_buffer;
