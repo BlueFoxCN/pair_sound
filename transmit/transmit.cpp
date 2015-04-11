@@ -160,27 +160,37 @@ void Transmit::start() {
       }
 
       if (adpcm) {
-        log_warn("AAAAAAAAAAAA");
-        log_warn("1: %d", (((short)t_buffer[2 * 0 + 1]) << 8) | t_buffer[2 * 0]);
-        log_warn("2: %d", (((short)t_buffer[2 * 1 + 1]) << 8) | t_buffer[2 * 1]);
-        log_warn("3: %d", (((short)t_buffer[2 * 2 + 1]) << 8) | t_buffer[2 * 2]);
-        log_warn("4: %d", (((short)t_buffer[2 * 3 + 1]) << 8) | t_buffer[2 * 3]);
-        log_warn("5: %d", (((short)t_buffer[2 * 4 + 1]) << 8) | t_buffer[2 * 4]);
+        // log_warn("AAAAAAAAAAAA");
+        // log_warn("1: %d", (((short)t_buffer[2 * 0 + 1]) << 8) | t_buffer[2 * 0]);
+        // log_warn("2: %d", (((short)t_buffer[2 * 1 + 1]) << 8) | t_buffer[2 * 1]);
+        // log_warn("3: %d", (((short)t_buffer[2 * 2 + 1]) << 8) | t_buffer[2 * 2]);
+        // log_warn("4: %d", (((short)t_buffer[2 * 3 + 1]) << 8) | t_buffer[2 * 3]);
+        // log_warn("5: %d", (((short)t_buffer[2 * 4 + 1]) << 8) | t_buffer[2 * 4]);
         // apply adpcm algorithm to the buffer data
         for (int i = 0; i < size / factor / 2; i++) {
           cur_sample = (((short)t_buffer[2 * i + 1]) << 8) | t_buffer[2 * i];
+          log_warn("00000");
+          log_warn("%d", cur_sample);
           delta = cur_sample - prev_sample;
+          log_warn("11111");
+          log_warn("%d", delta);
           if (delta < 0) {
             delta = -delta;
             sb = 8;
           } else {
             sb = 0;
           }
+          log_warn("22222");
+          log_warn("%d", sb);
           code = 4 * delta / step_table[index];
+          log_warn("33333");
+          log_warn("%d", code);
           if (code > 7) {
             code = 7;
           }
           index += index_adjust[code];
+          log_warn("44444");
+          log_warn("%d", index);
           if (index < 0) {
             index = 0;
           } else if (index > 88) {
@@ -189,10 +199,16 @@ void Transmit::start() {
           prev_sample = cur_sample;
           if (i % 2 == 0) {
             temp1 = code | sb;
+            log_warn("55555");
+            log_warn("%d", temp1);
           } else
           {
             temp2 = code | sb;
             adpcm_buffer[( i - 1 ) / 2] = (temp2 << 4) & temp1;
+            log_warn("55555");
+            log_warn("%d", temp2);
+            log_warn("666666");
+            log_warn("%d", adpcm_buffer[( i - 1 ) / 2]);
           }
         }
 
