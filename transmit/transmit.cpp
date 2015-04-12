@@ -157,6 +157,7 @@ void Transmit::start() {
       }
 
       if (adpcm) {
+        log_warn("AAAAAAAAAAAAAA");
         // apply adpcm algorithm to the buffer data
         for (int i = 0; i < size / factor / 2; i++) {
           cur_sample = (((short)t_buffer[2 * i + 1]) << 8) | (t_buffer[2 * i] & 0xFF);
@@ -177,6 +178,7 @@ void Transmit::start() {
           } else if (index > 88) {
             index = 88;
           }
+          log_warn("%d", index);
           prev_sample = cur_sample;
           if (i % 2 == 0) {
             temp1 = code | sb;
