@@ -161,9 +161,9 @@ void Transmit::start() {
           adpcm_buffer[0] = prev_sample & 0xFF;
           adpcm_buffer[1] = prev_sample >> 8;
           adpcm_buffer[2] = index & 0xFF;
+          log_warn("index: %d", index);
+          log_warn("prev_sample: %d", prev_sample);
         }
-        log_warn("index: %d", index);
-        log_warn("prev_sample: %d", prev_sample);
         // apply adpcm algorithm to the buffer data
         for (int i = 0; i < size / factor / 2; i++) {
           cur_sample = (((short)t_buffer[2 * i + 1]) << 8) | (t_buffer[2 * i] & 0xFF);
