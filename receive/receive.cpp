@@ -124,11 +124,15 @@ void Receive::start() {
   socklen_t len;
   len = sizeof(from);
 
-  adpcm_buffer = (char *) malloc(size / 4);
+  adpcm_buffer = (char *) malloc(size / 4 + 2);
   while (true) {
     if (adpcm) {
-      r = recvfrom(fd, adpcm_buffer, size / 4, 0, (struct sockaddr*)&from, &len);
-      for (int i = 0; i < size / 4; i++) {
+      index = 15;
+      r = recvfrom(fd, adpcm_buffer, size / 4 + 2, 0, (struct sockaddr*)&from, &len);
+      cur_sample = (((short)adpcm_buffer[1]) << 8) | (adpcm_buffer[0] & 0xFF);
+      buffer[0] = cur_sample & 0xFF;
+      buffer[1] = cur_sample >> 8;
+      for (int i = 2; i < size / 4 + 2; i++) {
         code = ( (short)adpcm_buffer[i] ) & 0x0F;
         if ((code & 8) != 0) {
           sb = 1;
@@ -154,36 +158,38 @@ void Receive::start() {
         } else if (index > 88) {
           index = 88;
         }
-        buffer[i * 4] = cur_data & 0xFF;
-        buffer[i * 4 + 1] = cur_data >> 8;
+        buffer[(i - 2) * 4 + 2] = cur_data & 0xFF;
+        buffer[(i - 2) * 4 + 3] = cur_data >> 8;
 
-        code = ( (short)adpcm_buffer[i] >> 4) & 0x0F;
-        if ((code & 8) != 0) {
-          sb = 1;
-        } else {
-          sb = 0;
+        if (i != size / 4 + 1) {
+          code = ( (short)adpcm_buffer[i] >> 4) & 0x0F;
+          if ((code & 8) != 0) {
+            sb = 1;
+          } else {
+            sb = 0;
+          }
+          code &= 7;
+          delta = (step_table[index]*code) / 4 + step_table[index] / 8;
+          if (sb == 1) {
+            delta = -delta;
+          }
+          cur_sample += delta;
+          if (cur_sample > 32767) {
+            cur_data = 32767;
+          } else if (cur_sample < -32767) {
+            cur_data = -32767;
+          } else {
+            cur_data = cur_sample;
+          }
+          index += index_adjust[code];
+          if (index < 0) {
+            index = 0;
+          } else if (index > 88) {
+            index = 88;
+          }
+          buffer[(i - 2) * 4 + 4] = cur_data & 0xFF;
+          buffer[(i - 2) * 4 + 5] = cur_data >> 8;
         }
-        code &= 7;
-        delta = (step_table[index]*code) / 4 + step_table[index] / 8;
-        if (sb == 1) {
-          delta = -delta;
-        }
-        cur_sample += delta;
-        if (cur_sample > 32767) {
-          cur_data = 32767;
-        } else if (cur_sample < -32767) {
-          cur_data = -32767;
-        } else {
-          cur_data = cur_sample;
-        }
-        index += index_adjust[code];
-        if (index < 0) {
-          index = 0;
-        } else if (index > 88) {
-          index = 88;
-        }
-        buffer[i * 4 + 2] = cur_data & 0xFF;
-        buffer[i * 4 + 3] = cur_data >> 8;
       }
     } else {
       r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
