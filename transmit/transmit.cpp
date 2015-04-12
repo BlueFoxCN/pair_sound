@@ -39,7 +39,7 @@ void Transmit::start() {
   // adpcm compress
   bool adpcm = true;
   short code, sb, delta, cur_sample, prev_sample = 0;
-  int index = 15;
+  int index = 15, adpcm_cycle = 4, adpcm_index = 0;
   char *adpcm_buffer;
   short temp1 = 0, temp2 = 0;
   int index_adjust[8] = {-1,-1,-1,-1,2,4,6,8};
@@ -134,7 +134,7 @@ void Transmit::start() {
     size = frames * 2 * channel_num; // 2 bytes/sample, 2 channels
     buffer = (char *) malloc(size);
     t_buffer = (char *) malloc(size / factor);
-    adpcm_buffer = (char *) malloc(size / factor / 4 + 4);
+    adpcm_buffer = (char *) malloc(size / factor / 4 * adpcm_cycle + 4);
 
     snd_pcm_hw_params_get_period_time(params, &val, &dir);
 
@@ -157,11 +157,13 @@ void Transmit::start() {
       }
 
       if (adpcm) {
-        adpcm_buffer[0] = t_buffer[0];
-        adpcm_buffer[1] = t_buffer[1];
-        adpcm_buffer[2] = index & 0xFF;
-        adpcm_buffer[3] = (index >> 8) & 0xFF;
-        prev_sample = (((short)adpcm_buffer[1]) << 8) | (adpcm_buffer[0] & 0xFF);
+        if (adpcm_index = 0) {
+          adpcm_buffer[0] = t_buffer[0];
+          adpcm_buffer[1] = t_buffer[1];
+          adpcm_buffer[2] = index & 0xFF;
+          adpcm_buffer[3] = (index >> 8) & 0xFF;
+          prev_sample = (((short)adpcm_buffer[1]) << 8) | (adpcm_buffer[0] & 0xFF);
+        }
         // apply adpcm algorithm to the buffer data
         for (int i = 1; i < size / factor / 2; i++) {
           cur_sample = (((short)t_buffer[2 * i + 1]) << 8) | (t_buffer[2 * i] & 0xFF);
@@ -186,16 +188,20 @@ void Transmit::start() {
           if (i % 2 == 1) {
             temp1 = code | sb;
             if (i == size / factor / 2 - 1) {
-              adpcm_buffer[(i + 1) / 2 + 3] = (temp1 & 0x0F);
+              adpcm_buffer[adpcm_index * (size / factor / 4) + (i + 1) / 2 + 3] = (temp1 & 0x0F);
             }
           } else {
             temp2 = code | sb;
-            // adpcm_buffer[( i - 1 ) / 2] = (temp2 << 4) | (temp1 & 0x0F);
-            adpcm_buffer[i / 2 + 3] = (temp2 << 4) | (temp1 & 0x0F);
+            adpcm_buffer[adpcm_index * (size / factor / 4) + i / 2 + 3] = (temp2 << 4) | (temp1 & 0x0F);
           }
         }
-        if (sendto(socket_src, adpcm_buffer, size / factor / 4 + 4, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
-          break;
+        if (adpcm_index == 3) {
+          adpcm_index = 0;
+          if (sendto(socket_src, adpcm_buffer, size / factor / 4 * adpcm_cycle + 4, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
+            break;
+          }
+        } else {
+          adpcm_index++;
         }
       } else {
         if (sendto(socket_src, t_buffer, size / factor, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {

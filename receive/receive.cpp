@@ -35,7 +35,7 @@ void Receive::start() {
   // adpcm compress
   bool adpcm = true;
   short code, sb, delta, cur_sample = 0, cur_data;
-  int index = 15;
+  int index = 15, adpcm_cycle = 4, adpcm_index = 0;;
   char *adpcm_buffer;
   short temp1 = 0, temp2 = 0;
   int index_adjust[8] = {-1,-1,-1,-1,2,4,6,8};
@@ -91,7 +91,11 @@ void Receive::start() {
   /* Use a buffer large enough to hold one period */
   snd_pcm_hw_params_get_period_size(params, &frames, &dir);
   size = frames * 2 * channel_num; /* 2 bytes/sample, 2 channels */
-  buffer = (char *) malloc(size);
+  if (adpcm == true) {
+    buffer = (char *) malloc(size * adpcm_cycle);
+  } else {
+    buffer = (char *) malloc(size);
+  }
 
   /* We want to loop for 5 seconds */
   snd_pcm_hw_params_get_period_time(params, &val, &dir);
@@ -124,15 +128,15 @@ void Receive::start() {
   socklen_t len;
   len = sizeof(from);
 
-  adpcm_buffer = (char *) malloc(size / 4 + 4);
+  adpcm_buffer = (char *) malloc(size / 4 * adpcm_cycle + 4);
   while (true) {
     if (adpcm) {
-      r = recvfrom(fd, adpcm_buffer, size / 4 + 4, 0, (struct sockaddr*)&from, &len);
+      r = recvfrom(fd, adpcm_buffer, size / 4 * adpcm_cycle + 4, 0, (struct sockaddr*)&from, &len);
       cur_sample = (((short)adpcm_buffer[1]) << 8) | (adpcm_buffer[0] & 0xFF);
       index = (((int)adpcm_buffer[3]) << 8) | (adpcm_buffer[2] & 0xFF);
       buffer[0] = cur_sample & 0xFF;
       buffer[1] = cur_sample >> 8;
-      for (int i = 4; i < size / 4 + 4; i++) {
+      for (int i = 4; i < size / 4 * adpcm_cycle + 4; i++) {
         code = ( (short)adpcm_buffer[i] ) & 0x0F;
         if ((code & 8) != 0) {
           sb = 1;
@@ -161,7 +165,7 @@ void Receive::start() {
         buffer[(i - 4) * 4 + 2] = cur_data & 0xFF;
         buffer[(i - 4) * 4 + 3] = cur_data >> 8;
 
-        if (i != size / 4 + 3) {
+        if (i != size / 4 * adpcm_cycle + 3) {
           code = ( (short)adpcm_buffer[i] >> 4) & 0x0F;
           if ((code & 8) != 0) {
             sb = 1;
@@ -195,15 +199,30 @@ void Receive::start() {
       r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
     }
 
-    rc = snd_pcm_writei(handle, buffer, frames);
-    if (rc == -EPIPE) {
-      // EPIPE means underrun
-      fprintf(stderr, "underrun occurred\n");
-      snd_pcm_prepare(handle);
-    } else if (rc < 0) {
-      fprintf(stderr, "error from writei: %s\n", snd_strerror(rc));
-    }  else if (rc != (int)frames) {
-      fprintf(stderr, "short write, write %d frames\n", rc);
+    if (adpcm) {
+      for (adpcm_index = 0; adpcm_index < adpcm_cycle; adpcm_index++) {
+        rc = snd_pcm_writei(handle, &buffer[size * adpcm_index], frames);
+        if (rc == -EPIPE) {
+          // EPIPE means underrun
+          fprintf(stderr, "underrun occurred\n");
+          snd_pcm_prepare(handle);
+        } else if (rc < 0) {
+          fprintf(stderr, "error from writei: %s\n", snd_strerror(rc));
+        }  else if (rc != (int)frames) {
+          fprintf(stderr, "short write, write %d frames\n", rc);
+        }
+      }
+    } else {
+      rc = snd_pcm_writei(handle, buffer, frames);
+      if (rc == -EPIPE) {
+        // EPIPE means underrun
+        fprintf(stderr, "underrun occurred\n");
+        snd_pcm_prepare(handle);
+      } else if (rc < 0) {
+        fprintf(stderr, "error from writei: %s\n", snd_strerror(rc));
+      }  else if (rc != (int)frames) {
+        fprintf(stderr, "short write, write %d frames\n", rc);
+      }
     }
   }
   close(fd);
