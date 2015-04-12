@@ -35,7 +35,7 @@ void Receive::start() {
   // adpcm compress
   bool adpcm = true;
   short code, sb, delta, cur_sample = 0, cur_data;
-  int index = 15, adpcm_cycle = 1, adpcm_index = 0;;
+  int index = 15, adpcm_cycle = 24, adpcm_index = 0;;
   char *adpcm_buffer;
   short temp1 = 0, temp2 = 0;
   int index_adjust[8] = {-1,-1,-1,-1,2,4,6,8};
@@ -134,8 +134,6 @@ void Receive::start() {
       r = recvfrom(fd, adpcm_buffer, size / 4 * adpcm_cycle + 4, 0, (struct sockaddr*)&from, &len);
       cur_sample = (((short)adpcm_buffer[1]) << 8) | (adpcm_buffer[0] & 0xFF);
       index = (((int)adpcm_buffer[3]) << 8) | (adpcm_buffer[2] & 0xFF);
-      buffer[0] = cur_sample & 0xFF;
-      buffer[1] = cur_sample >> 8;
       for (int i = 4; i < size / 4 * adpcm_cycle + 4; i++) {
         code = ( (short)adpcm_buffer[i] ) & 0x0F;
         if ((code & 8) != 0) {
@@ -162,38 +160,36 @@ void Receive::start() {
         } else if (index > 88) {
           index = 88;
         }
+        buffer[(i - 4) * 4] = cur_data & 0xFF;
+        buffer[(i - 4) * 4 + 1] = cur_data >> 8;
+
+        code = ( (short)adpcm_buffer[i] >> 4) & 0x0F;
+        if ((code & 8) != 0) {
+          sb = 1;
+        } else {
+          sb = 0;
+        }
+        code &= 7;
+        delta = (step_table[index]*code) / 4 + step_table[index] / 8;
+        if (sb == 1) {
+          delta = -delta;
+        }
+        cur_sample += delta;
+        if (cur_sample > 32767) {
+          cur_data = 32767;
+        } else if (cur_sample < -32767) {
+          cur_data = -32767;
+        } else {
+          cur_data = cur_sample;
+        }
+        index += index_adjust[code];
+        if (index < 0) {
+          index = 0;
+        } else if (index > 88) {
+          index = 88;
+        }
         buffer[(i - 4) * 4 + 2] = cur_data & 0xFF;
         buffer[(i - 4) * 4 + 3] = cur_data >> 8;
-
-        if (i != size / 4 * adpcm_cycle + 3) {
-          code = ( (short)adpcm_buffer[i] >> 4) & 0x0F;
-          if ((code & 8) != 0) {
-            sb = 1;
-          } else {
-            sb = 0;
-          }
-          code &= 7;
-          delta = (step_table[index]*code) / 4 + step_table[index] / 8;
-          if (sb == 1) {
-            delta = -delta;
-          }
-          cur_sample += delta;
-          if (cur_sample > 32767) {
-            cur_data = 32767;
-          } else if (cur_sample < -32767) {
-            cur_data = -32767;
-          } else {
-            cur_data = cur_sample;
-          }
-          index += index_adjust[code];
-          if (index < 0) {
-            index = 0;
-          } else if (index > 88) {
-            index = 88;
-          }
-          buffer[(i - 4) * 4 + 4] = cur_data & 0xFF;
-          buffer[(i - 4) * 4 + 5] = cur_data >> 8;
-        }
       }
     } else {
       r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
