@@ -35,7 +35,7 @@ void Receive::start() {
   // adpcm compress
   bool adpcm = true;
   short code, sb, delta, cur_sample = 0, cur_data;
-  int index = 0;
+  int index = 15;
   char *adpcm_buffer;
   short temp1 = 0, temp2 = 0;
   int index_adjust[8] = {-1,-1,-1,-1,2,4,6,8};
@@ -124,15 +124,15 @@ void Receive::start() {
   socklen_t len;
   len = sizeof(from);
 
-  adpcm_buffer = (char *) malloc(size / 4 + 2);
+  adpcm_buffer = (char *) malloc(size / 4 + 4);
   while (true) {
     if (adpcm) {
-      index = 15;
-      r = recvfrom(fd, adpcm_buffer, size / 4 + 2, 0, (struct sockaddr*)&from, &len);
+      r = recvfrom(fd, adpcm_buffer, size / 4 + 4, 0, (struct sockaddr*)&from, &len);
       cur_sample = (((short)adpcm_buffer[1]) << 8) | (adpcm_buffer[0] & 0xFF);
+      index = (((int)adpcm_buffer[3]) << 8) | (adpcm_buffer[2] & 0xFF);
       buffer[0] = cur_sample & 0xFF;
       buffer[1] = cur_sample >> 8;
-      for (int i = 2; i < size / 4 + 2; i++) {
+      for (int i = 4; i < size / 4 + 4; i++) {
         code = ( (short)adpcm_buffer[i] ) & 0x0F;
         if ((code & 8) != 0) {
           sb = 1;
@@ -158,10 +158,10 @@ void Receive::start() {
         } else if (index > 88) {
           index = 88;
         }
-        buffer[(i - 2) * 4 + 2] = cur_data & 0xFF;
-        buffer[(i - 2) * 4 + 3] = cur_data >> 8;
+        buffer[(i - 4) * 4 + 2] = cur_data & 0xFF;
+        buffer[(i - 4) * 4 + 3] = cur_data >> 8;
 
-        if (i != size / 4 + 1) {
+        if (i != size / 4 + 3) {
           code = ( (short)adpcm_buffer[i] >> 4) & 0x0F;
           if ((code & 8) != 0) {
             sb = 1;
@@ -187,8 +187,8 @@ void Receive::start() {
           } else if (index > 88) {
             index = 88;
           }
-          buffer[(i - 2) * 4 + 4] = cur_data & 0xFF;
-          buffer[(i - 2) * 4 + 5] = cur_data >> 8;
+          buffer[(i - 4) * 4 + 4] = cur_data & 0xFF;
+          buffer[(i - 4) * 4 + 5] = cur_data >> 8;
         }
       }
     } else {
