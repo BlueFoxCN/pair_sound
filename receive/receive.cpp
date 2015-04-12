@@ -210,7 +210,9 @@ void Receive::start() {
       snd_pcm_prepare(handle);
     } else if (rc < 0) {
       fprintf(stderr, "error from writei: %s\n", snd_strerror(rc));
-    }  else if (rc != (int)frames) {
+    } else if (adpcm == false && rc != (int)frames) {
+      fprintf(stderr, "short write, write %d frames\n", rc);
+    } else if (adpcm == true && rc != (int)frames * adpcm_cycle) {
       fprintf(stderr, "short write, write %d frames\n", rc);
     }
   }

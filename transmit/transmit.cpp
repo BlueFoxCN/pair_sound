@@ -157,7 +157,7 @@ void Transmit::start() {
       }
 
       if (adpcm) {
-        if (adpcm_index = 0) {
+        if (adpcm_index == 0) {
           adpcm_buffer[0] = t_buffer[0];
           adpcm_buffer[1] = t_buffer[1];
           adpcm_buffer[2] = index & 0xFF;
