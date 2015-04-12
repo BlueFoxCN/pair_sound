@@ -135,6 +135,7 @@ void Receive::start() {
       cur_sample = (((short)adpcm_buffer[1]) << 8) | (adpcm_buffer[0] & 0xFF);
       index = (((short)adpcm_buffer[3]) << 8) | (adpcm_buffer[2] & 0xFF);
       log_warn("index: %d", index);
+      log_warn("cur_sample: %d", index);
       for (int i = 4; i < size / 4 * adpcm_cycle + 4; i++) {
         code = ( (short)adpcm_buffer[i] ) & 0x0F;
         if ((code & 8) != 0) {
