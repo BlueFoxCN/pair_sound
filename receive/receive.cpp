@@ -35,7 +35,7 @@ void Receive::start() {
   // adpcm compress
   bool adpcm = true;
   short code, sb, delta, cur_sample = 0, cur_data;
-  int adpcm_cycle = 24, adpcm_index = 0;;
+  int adpcm_cycle = 4, adpcm_index = 0;;
   char *adpcm_buffer;
   short temp1 = 0, temp2 = 0, index = 15;
   int index_adjust[8] = {-1,-1,-1,-1,2,4,6,8};
@@ -134,8 +134,6 @@ void Receive::start() {
       r = recvfrom(fd, adpcm_buffer, size / 4 * adpcm_cycle + 4, 0, (struct sockaddr*)&from, &len);
       cur_sample = (((short)adpcm_buffer[1]) << 8) | (adpcm_buffer[0] & 0xFF);
       index = (short)(adpcm_buffer[2] & 0xFF);
-      log_warn("index: %d", index);
-      log_warn("cur_sample: %d", cur_sample);
       for (int i = 4; i < size / 4 * adpcm_cycle + 4; i++) {
         code = ( (short)adpcm_buffer[i] ) & 0x0F;
         if ((code & 8) != 0) {

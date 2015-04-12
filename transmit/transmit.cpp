@@ -39,7 +39,7 @@ void Transmit::start() {
   // adpcm compress
   bool adpcm = true;
   short code, sb, delta, cur_sample, prev_sample = 0;
-  int adpcm_cycle = 24, adpcm_index = 0;
+  int adpcm_cycle = 4, adpcm_index = 0;
   char *adpcm_buffer;
   short temp1 = 0, temp2 = 0, index = 15;
   int index_adjust[8] = {-1,-1,-1,-1,2,4,6,8};
@@ -161,8 +161,6 @@ void Transmit::start() {
           adpcm_buffer[0] = prev_sample & 0xFF;
           adpcm_buffer[1] = prev_sample >> 8;
           adpcm_buffer[2] = index & 0xFF;
-          log_warn("index: %d", index);
-          log_warn("prev_sample: %d", prev_sample);
         }
         // apply adpcm algorithm to the buffer data
         for (int i = 0; i < size / factor / 2; i++) {
