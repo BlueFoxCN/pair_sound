@@ -161,7 +161,6 @@ void Transmit::start() {
           adpcm_buffer[0] = prev_sample & 0xFF;
           adpcm_buffer[1] = prev_sample >> 8;
           adpcm_buffer[2] = index & 0xFF;
-          adpcm_buffer[3] = (index >> 8) & 0xFF;
         }
         log_warn("index: %d", index);
         log_warn("prev_sample: %d", prev_sample);
@@ -190,7 +189,7 @@ void Transmit::start() {
             temp1 = code | sb;
           } else {
             temp2 = code | sb;
-            adpcm_buffer[adpcm_index * (size / factor / 4) + i / 2 + 3] = (temp2 << 4) | (temp1 & 0x0F);
+            adpcm_buffer[adpcm_index * (size / factor / 4) + (i - 1) / 2 + 4] = (temp2 << 4) | (temp1 & 0x0F);
           }
         }
         if (adpcm_index == adpcm_cycle - 1) {
