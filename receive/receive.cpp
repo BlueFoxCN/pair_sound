@@ -35,9 +35,9 @@ void Receive::start() {
   // adpcm compress
   bool adpcm = true;
   short code, sb, delta, cur_sample = 0, cur_data;
-  int index = 15, adpcm_cycle = 24, adpcm_index = 0;;
+  int adpcm_cycle = 24, adpcm_index = 0;;
   char *adpcm_buffer;
-  short temp1 = 0, temp2 = 0;
+  short temp1 = 0, temp2 = 0, index = 15;
   int index_adjust[8] = {-1,-1,-1,-1,2,4,6,8};
   int step_table[89] = 
     {
@@ -133,20 +133,26 @@ void Receive::start() {
     if (adpcm) {
       r = recvfrom(fd, adpcm_buffer, size / 4 * adpcm_cycle + 4, 0, (struct sockaddr*)&from, &len);
       cur_sample = (((short)adpcm_buffer[1]) << 8) | (adpcm_buffer[0] & 0xFF);
-      index = (((int)adpcm_buffer[3]) << 8) | (adpcm_buffer[2] & 0xFF);
+      index = (((short)adpcm_buffer[3]) << 8) | (adpcm_buffer[2] & 0xFF);
       for (int i = 4; i < size / 4 * adpcm_cycle + 4; i++) {
+        log_warn("00000");
         code = ( (short)adpcm_buffer[i] ) & 0x0F;
+        log_warn("code: %d", code);
         if ((code & 8) != 0) {
           sb = 1;
         } else {
           sb = 0;
         }
         code &= 7;
+        log_warn("index: %d", index);
         delta = (step_table[index]*code) / 4 + step_table[index] / 8;
+        log_warn("delta: %d", delta);
         if (sb == 1) {
           delta = -delta;
         }
+        log_warn("cur_sample: %d", cur_sample);
         cur_sample += delta;
+        log_warn("cur_sample: %d", cur_sample);
         if (cur_sample > 32767) {
           cur_data = 32767;
         } else if (cur_sample < -32767) {
@@ -155,13 +161,16 @@ void Receive::start() {
           cur_data = cur_sample;
         }
         index += index_adjust[code];
+        log_warn("index: %d", index);
         if (index < 0) {
           index = 0;
         } else if (index > 88) {
           index = 88;
         }
+        log_warn("11111");
         buffer[(i - 4) * 4] = cur_data & 0xFF;
         buffer[(i - 4) * 4 + 1] = cur_data >> 8;
+        log_warn("22222");
 
         code = ( (short)adpcm_buffer[i] >> 4) & 0x0F;
         if ((code & 8) != 0) {
@@ -188,14 +197,17 @@ void Receive::start() {
         } else if (index > 88) {
           index = 88;
         }
+        log_warn("33333");
         buffer[(i - 4) * 4 + 2] = cur_data & 0xFF;
         buffer[(i - 4) * 4 + 3] = cur_data >> 8;
+        log_warn("44444");
       }
     } else {
       r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
     }
 
     if (adpcm) {
+      log_warn("55555");
       for (adpcm_index = 0; adpcm_index < adpcm_cycle; adpcm_index++) {
         rc = snd_pcm_writei(handle, &buffer[adpcm_index * size], frames);
         if (rc == -EPIPE) {
@@ -208,6 +220,7 @@ void Receive::start() {
           fprintf(stderr, "short write, write %d frames\n", rc);
         }
       }
+      log_warn("66666");
     } else {
       rc = snd_pcm_writei(handle, buffer, frames);
       if (rc == -EPIPE) {

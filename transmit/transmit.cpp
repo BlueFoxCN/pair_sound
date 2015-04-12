@@ -39,9 +39,9 @@ void Transmit::start() {
   // adpcm compress
   bool adpcm = true;
   short code, sb, delta, cur_sample, prev_sample = 0;
-  int index = 15, adpcm_cycle = 24, adpcm_index = 0;
+  int adpcm_cycle = 24, adpcm_index = 0;
   char *adpcm_buffer;
-  short temp1 = 0, temp2 = 0;
+  short temp1 = 0, temp2 = 0, index = 15;
   int index_adjust[8] = {-1,-1,-1,-1,2,4,6,8};
   int step_table[89] = 
     {
