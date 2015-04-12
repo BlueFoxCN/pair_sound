@@ -39,7 +39,7 @@ void Transmit::start() {
   // adpcm compress
   bool adpcm = true;
   short code, sb, delta, cur_sample, prev_sample = 0;
-  int index = 15, adpcm_cycle = 4, adpcm_index = 0;
+  int index = 15, adpcm_cycle = 1, adpcm_index = 0;
   char *adpcm_buffer;
   short temp1 = 0, temp2 = 0;
   int index_adjust[8] = {-1,-1,-1,-1,2,4,6,8};
@@ -195,7 +195,7 @@ void Transmit::start() {
             adpcm_buffer[adpcm_index * (size / factor / 4) + i / 2 + 3] = (temp2 << 4) | (temp1 & 0x0F);
           }
         }
-        if (adpcm_index == 3) {
+        if (adpcm_index == adpcm_cycle - 1) {
           adpcm_index = 0;
           if (sendto(socket_src, adpcm_buffer, size / factor / 4 * adpcm_cycle + 4, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
             break;
