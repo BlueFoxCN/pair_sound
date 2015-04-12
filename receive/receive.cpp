@@ -200,20 +200,29 @@ void Receive::start() {
     }
 
     if (adpcm) {
-      rc = snd_pcm_writei(handle, buffer, frames * adpcm_cycle);
+      for (adpcm_index = 0; adpcm_index < adpcm_cycle; adpcm_index++) {
+        rc = snd_pcm_writei(handle, &buffer[adpcm_index * size], frames);
+        if (rc == -EPIPE) {
+          // EPIPE means underrun
+          fprintf(stderr, "underrun occurred\n");
+          snd_pcm_prepare(handle);
+        } else if (rc < 0) {
+          fprintf(stderr, "error from writei: %s\n", snd_strerror(rc));
+        } else if (rc != (int)frames) {
+          fprintf(stderr, "short write, write %d frames\n", rc);
+        }
+      }
     } else {
       rc = snd_pcm_writei(handle, buffer, frames);
-    }
-    if (rc == -EPIPE) {
-      // EPIPE means underrun
-      fprintf(stderr, "underrun occurred\n");
-      snd_pcm_prepare(handle);
-    } else if (rc < 0) {
-      fprintf(stderr, "error from writei: %s\n", snd_strerror(rc));
-    } else if (adpcm == false && rc != (int)frames) {
-      fprintf(stderr, "short write, write %d frames\n", rc);
-    } else if (adpcm == true && rc != (int)frames * adpcm_cycle) {
-      fprintf(stderr, "short write, write %d frames\n", rc);
+      if (rc == -EPIPE) {
+        // EPIPE means underrun
+        fprintf(stderr, "underrun occurred\n");
+        snd_pcm_prepare(handle);
+      } else if (rc < 0) {
+        fprintf(stderr, "error from writei: %s\n", snd_strerror(rc));
+      } else if (rc != (int)frames) {
+        fprintf(stderr, "short write, write %d frames\n", rc);
+      }
     }
   }
   close(fd);
