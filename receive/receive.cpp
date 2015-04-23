@@ -197,7 +197,11 @@ void Receive::start() {
 
     if (adpcm) {
       for (adpcm_index = 0; adpcm_index < adpcm_cycle; adpcm_index++) {
-        rc = snd_pcm_writei(handle, &buffer[adpcm_index * size], frames);
+        if (adpcm_index == 0) {
+          rc = snd_pcm_writei(handle, &buffer[2], frames);
+        } else {
+          rc = snd_pcm_writei(handle, &buffer[adpcm_index * size], frames);
+        }
         if (rc == -EPIPE) {
           // EPIPE means underrun
           fprintf(stderr, "underrun occurred\n");
