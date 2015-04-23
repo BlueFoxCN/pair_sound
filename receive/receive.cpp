@@ -35,9 +35,9 @@ void Receive::start() {
   // adpcm compress
   bool adpcm = true;
   short code, sb, delta, cur_sample = 0, cur_data;
-  int adpcm_cycle = 4, adpcm_index = 0;;
+  int adpcm_cycle = 4, adpcm_index = 0;
   char *adpcm_buffer;
-  short temp1 = 0, temp2 = 0, index = 15;
+  short temp1 = 0, temp2 = 0, index = 15, packet_index = 0, new_packet_index = 0;
   int index_adjust[8] = {-1,-1,-1,-1,2,4,6,8};
   int step_table[89] = 
     {
@@ -128,13 +128,17 @@ void Receive::start() {
   socklen_t len;
   len = sizeof(from);
 
-  adpcm_buffer = (char *) malloc(size / 4 * adpcm_cycle + 4);
+  adpcm_buffer = (char *) malloc(size / 4 * adpcm_cycle + 6);
   while (true) {
     if (adpcm) {
       r = recvfrom(fd, adpcm_buffer, size / 4 * adpcm_cycle + 4, 0, (struct sockaddr*)&from, &len);
-      cur_sample = (((short)adpcm_buffer[1]) << 8) | (adpcm_buffer[0] & 0xFF);
+      new_packet_index = (((short)adpcm_buffer[5]) << 8) | (adpcm_buffer[4] & 0xFF);
+      if (new_packet_index - packet_index != 1) {
+        cur_sample = (((short)adpcm_buffer[1]) << 8) | (adpcm_buffer[0] & 0xFF);
+      }
+      packet_index = new_packet_index;
       index = (short)(adpcm_buffer[2] & 0xFF);
-      for (int i = 4; i < size / 4 * adpcm_cycle + 4; i++) {
+      for (int i = 6; i < size / 4 * adpcm_cycle + 6; i++) {
         code = ( (short)adpcm_buffer[i] ) & 0x0F;
         if ((code & 8) != 0) {
           sb = 1;
@@ -160,8 +164,8 @@ void Receive::start() {
         } else if (index > 88) {
           index = 88;
         }
-        buffer[(i - 4) * 4] = cur_data & 0xFF;
-        buffer[(i - 4) * 4 + 1] = cur_data >> 8;
+        buffer[(i - 6) * 4] = cur_data & 0xFF;
+        buffer[(i - 6) * 4 + 1] = cur_data >> 8;
 
         code = ( (short)adpcm_buffer[i] >> 4) & 0x0F;
         if ((code & 8) != 0) {
@@ -188,8 +192,8 @@ void Receive::start() {
         } else if (index > 88) {
           index = 88;
         }
-        buffer[(i - 4) * 4 + 2] = cur_data & 0xFF;
-        buffer[(i - 4) * 4 + 3] = cur_data >> 8;
+        buffer[(i - 6) * 4 + 2] = cur_data & 0xFF;
+        buffer[(i - 6) * 4 + 3] = cur_data >> 8;
       }
     } else {
       r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
@@ -197,11 +201,7 @@ void Receive::start() {
 
     if (adpcm) {
       for (adpcm_index = 0; adpcm_index < adpcm_cycle; adpcm_index++) {
-        if (adpcm_index == 0) {
-          rc = snd_pcm_writei(handle, &buffer[2], frames);
-        } else {
-          rc = snd_pcm_writei(handle, &buffer[adpcm_index * size], frames);
-        }
+        rc = snd_pcm_writei(handle, &buffer[adpcm_index * size], frames);
         if (rc == -EPIPE) {
           // EPIPE means underrun
           fprintf(stderr, "underrun occurred\n");

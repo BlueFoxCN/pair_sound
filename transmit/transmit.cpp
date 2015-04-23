@@ -41,7 +41,7 @@ void Transmit::start() {
   short code, sb, delta, cur_sample, prev_sample = 0;
   int adpcm_cycle = 4, adpcm_index = 0;
   char *adpcm_buffer;
-  short temp1 = 0, temp2 = 0, index = 15;
+  short temp1 = 0, temp2 = 0, index = 15, packet_index = 0;
   int index_adjust[8] = {-1,-1,-1,-1,2,4,6,8};
   int step_table[89] = 
     {
@@ -134,7 +134,7 @@ void Transmit::start() {
     size = frames * 2 * channel_num; // 2 bytes/sample, 2 channels
     buffer = (char *) malloc(size);
     t_buffer = (char *) malloc(size / factor);
-    adpcm_buffer = (char *) malloc(size / factor / 4 * adpcm_cycle + 4);
+    adpcm_buffer = (char *) malloc(size / factor / 4 * adpcm_cycle + 6);
 
     snd_pcm_hw_params_get_period_time(params, &val, &dir);
 
@@ -161,6 +161,12 @@ void Transmit::start() {
           adpcm_buffer[0] = prev_sample & 0xFF;
           adpcm_buffer[1] = prev_sample >> 8;
           adpcm_buffer[2] = index & 0xFF;
+          adpcm_buffer[4] = packet_index & 0xFF;
+          adpcm_buffer[5] = packet_index >> 8;
+          packet_index++;
+          if (packet_index == 10000) {
+            packet_index = 0;
+          }
         }
         // apply adpcm algorithm to the buffer data
         for (int i = 0; i < size / factor / 2; i++) {
@@ -187,12 +193,12 @@ void Transmit::start() {
             temp1 = code | sb;
           } else {
             temp2 = code | sb;
-            adpcm_buffer[adpcm_index * (size / factor / 4) + (i - 1) / 2 + 4] = (temp2 << 4) | (temp1 & 0x0F);
+            adpcm_buffer[adpcm_index * (size / factor / 4) + (i - 1) / 2 + 6] = (temp2 << 4) | (temp1 & 0x0F);
           }
         }
         if (adpcm_index == adpcm_cycle - 1) {
           adpcm_index = 0;
-          if (sendto(socket_src, adpcm_buffer, size / factor / 4 * adpcm_cycle + 4, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
+          if (sendto(socket_src, adpcm_buffer, size / factor / 4 * adpcm_cycle + 6, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
             break;
           }
         } else {
