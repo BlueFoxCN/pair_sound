@@ -1,5 +1,6 @@
 #include <iostream>
 #include <alsa/asoundlib.h>
+#include <speex/speex.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <cstring>
