@@ -59,7 +59,7 @@ void Transmit::start() {
   void *enc_state;
   SpeexBits enc_bits;
   int nbBytes;
-  enc_state = speex_encoder_init(&speex_wb_mode);
+  enc_state = speex_encoder_init(&speex_nb_mode);
   int q = 8;
   speex_encoder_ctl(enc_state,SPEEX_SET_QUALITY,&q);
   // speex_encoder_ctl(enc_state,SPEEX_GET_FRAME_SIZE,&frames_size );
@@ -225,7 +225,8 @@ void Transmit::start() {
         }
         speex_bits_reset(&enc_bits);
         speex_encode_int(enc_state, speex_out, &enc_bits);
-        nbBytes = speex_bits_write(&enc_bits, s_buffer, 70);
+        nbBytes = speex_bits_write(&enc_bits, s_buffer, 200);
+        fprintf(stderr, "%d\n", nbBytes);
         if (sendto(socket_src, s_buffer, nbBytes, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
           break;
         }

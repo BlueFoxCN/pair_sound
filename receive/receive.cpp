@@ -55,7 +55,7 @@ void Receive::start() {
   SpeexBits dec_bits;
   int nbBytes = 70;
   char s_buffer[nbBytes];
-  dec_state = speex_decoder_init(&speex_wb_mode);
+  dec_state = speex_decoder_init(&speex_nb_mode);
   int q=8;
   speex_decoder_ctl(dec_state,SPEEX_SET_QUALITY,&q);
   speex_bits_init(&dec_bits);
