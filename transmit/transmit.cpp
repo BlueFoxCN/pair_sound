@@ -1,5 +1,6 @@
 #include <iostream>
 #include <alsa/asoundlib.h>
+#include <speex/speex.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <cstring>
@@ -37,7 +38,7 @@ void Transmit::start() {
   int factor;
 
   // adpcm compress
-  bool adpcm = true;
+  bool adpcm = false;
   short code, sb, delta, cur_sample, prev_sample = 0;
   int adpcm_cycle = 4, adpcm_index = 0;
   char *adpcm_buffer;
@@ -51,6 +52,17 @@ void Transmit::start() {
       2272,2499,2749,3024,3327,3660,4026,4428,4871,5358,5894,6484,7132,7845,8630,9493,
       10442,11487,12635,13899,15289,16818,18500,20350,22385,24623,27086,29794,32767
     };
+
+  // speex compress
+  bool speex = true;
+  void *enc_state;
+  SpeexBits enc_bits;
+  int nbBytes;
+  enc_state = speex_encoder_init(&speex_wb_mode);
+  int q = 8;
+  speex_encoder_ctl(enc_state,SPEEX_SET_QUALITY,&q);
+  speex_encoder_ctl(enc_state,SPEEX_GET_FRAME_SIZE,&frames_size );
+  speex_bits_init(&enc_bits);
 
   while (true) {
     sleep(1);
