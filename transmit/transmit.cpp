@@ -220,7 +220,8 @@ void Transmit::start() {
         }
       } else if (speex) {
         for(int i = 0; i < size / factor / 2; i++) {
-          speex_out[i] = ( t_buffer[2 * i + 1] << 8 ) | (unsigned char)t_buffer[2 * i];
+          // speex_out[i] = ( t_buffer[2 * i + 1] << 8 ) | (unsigned char)t_buffer[2 * i];
+          speex_out[i] = (((short)t_buffer[2 * i + 1]) << 8) | (t_buffer[2 * i] & 0xFF);
         }
         speex_bits_reset(&enc_bits);
         speex_encode_int(enc_state, speex_out, &enc_bits);
