@@ -225,8 +225,7 @@ void Transmit::start() {
         }
         speex_bits_reset(&enc_bits);
         speex_encode_int(enc_state, speex_out, &enc_bits);
-        nbBytes = speex_bits_write(&enc_bits, s_buffer, 200);
-        fprintf(stderr, "%d\n", nbBytes);
+        nbBytes = speex_bits_write(&enc_bits, s_buffer, 38);
         if (sendto(socket_src, s_buffer, nbBytes, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
           break;
         }
