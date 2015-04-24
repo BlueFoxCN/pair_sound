@@ -55,13 +55,14 @@ void Transmit::start() {
 
   // speex compress
   bool speex = true;
+  char s_buffer[200];
   void *enc_state;
   SpeexBits enc_bits;
   int nbBytes;
   enc_state = speex_encoder_init(&speex_wb_mode);
   int q = 8;
   speex_encoder_ctl(enc_state,SPEEX_SET_QUALITY,&q);
-  speex_encoder_ctl(enc_state,SPEEX_GET_FRAME_SIZE,&frames_size );
+  // speex_encoder_ctl(enc_state,SPEEX_GET_FRAME_SIZE,&frames_size );
   speex_bits_init(&enc_bits);
 
   while (true) {
@@ -147,6 +148,7 @@ void Transmit::start() {
     buffer = (char *) malloc(size);
     t_buffer = (char *) malloc(size / factor);
     adpcm_buffer = (char *) malloc(size / factor / 4 * adpcm_cycle + 6);
+    short speex_out[size / factor / 2];
 
     snd_pcm_hw_params_get_period_time(params, &val, &dir);
 
@@ -215,6 +217,17 @@ void Transmit::start() {
           }
         } else {
           adpcm_index++;
+        }
+      } else if (speex) {
+        for(int i = 0; i < size / factor / 2; i++) {
+          speex_out[i] = ( t_buffer[2 * i + 1] << 8 ) | (unsigned char)t_buffer[2 * i];
+        }
+        speex_bits_reset(&enc_bits);
+        speex_encode_int(enc_state, speex_out, &enc_bits);
+        nbBytes = speex_bits_write(&enc_bits, s_buffer, 200);
+        fprintf(stderr, "%d\n", nbBytes);
+        if (sendto(socket_src, s_buffer, nbBytes, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
+          break;
         }
       } else {
         if (sendto(socket_src, t_buffer, size / factor, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {

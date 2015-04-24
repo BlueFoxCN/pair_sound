@@ -33,7 +33,7 @@ void Receive::start() {
   int channel_num = 1;
 
   // adpcm compress
-  bool adpcm = true;
+  bool adpcm = false;
   short code, sb, delta, cur_sample = 0, cur_data;
   int adpcm_cycle = 4, adpcm_index = 0;
   char *adpcm_buffer;
@@ -47,6 +47,18 @@ void Receive::start() {
       2272,2499,2749,3024,3327,3660,4026,4428,4871,5358,5894,6484,7132,7845,8630,9493,
       10442,11487,12635,13899,15289,16818,18500,20350,22385,24623,27086,29794,32767
     };
+
+  // speex compress
+  bool speex = true;
+  void *dec_state;
+  SpeexBits dec_bits;
+  int nbBytes = 70;
+  char s_buffer[nbBytes];
+  dec_state = speex_decoder_init(&speex_wb_mode);
+  int q=8;
+  speex_decoder_ctl(dec_state,SPEEX_SET_QUALITY,&q);
+  speex_bits_init(&dec_bits);
+
 
   /* Open PCM device for playback. */
   rc = snd_pcm_open(&handle, "plughw:0,0", SND_PCM_STREAM_PLAYBACK, 0);
@@ -96,6 +108,7 @@ void Receive::start() {
   } else {
     buffer = (char *) malloc(size);
   }
+  short speex_in[size / 2];
 
   /* We want to loop for 5 seconds */
   snd_pcm_hw_params_get_period_time(params, &val, &dir);
@@ -194,6 +207,14 @@ void Receive::start() {
         }
         buffer[(i - 6) * 4 + 2] = cur_data & 0xFF;
         buffer[(i - 6) * 4 + 3] = cur_data >> 8;
+      }
+    } else if (speex) {
+      r = recvfrom(fd, s_buffer, nbBytes, 0, (struct sockaddr*)&from, &len);
+      speex_bits_read_from(&dec_bits, s_buffer, nbBytes);
+      speex_decode_int(dec_state, &dec_bits, speex_in);
+      for(int i = 0; i < size / 2; i++) {
+        buffer[2 * i] = speex_in[i] & 0xFF;
+        buffer[2 * i + 1] = speex_in[i] >> 8;
       }
     } else {
       r = recvfrom(fd, buffer, size, 0, (struct sockaddr*)&from, &len);
