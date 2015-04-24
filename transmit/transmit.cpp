@@ -55,7 +55,7 @@ void Transmit::start() {
 
   // speex compress
   bool speex = true;
-  char s_buffer[200];
+  char s_buffer[70];
   void *enc_state;
   SpeexBits enc_bits;
   int nbBytes;
@@ -224,8 +224,7 @@ void Transmit::start() {
         }
         speex_bits_reset(&enc_bits);
         speex_encode_int(enc_state, speex_out, &enc_bits);
-        nbBytes = speex_bits_write(&enc_bits, s_buffer, 200);
-        fprintf(stderr, "%d\n", nbBytes);
+        nbBytes = speex_bits_write(&enc_bits, s_buffer, 70);
         if (sendto(socket_src, s_buffer, nbBytes, 0, (struct sockaddr*)&server, sizeof(server)) < 0) {
           break;
         }
