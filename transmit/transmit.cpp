@@ -55,7 +55,7 @@ void Transmit::start() {
 
   // speex compress
   bool speex = true;
-  char s_buffer[70];
+  char s_buffer[38];
   void *enc_state;
   SpeexBits enc_bits;
   int nbBytes;
